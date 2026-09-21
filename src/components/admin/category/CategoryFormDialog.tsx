@@ -19,7 +19,7 @@ import type { Category } from "@/types/category";
 interface CategoryFormDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    category: Category | null; // null = Add mode, দেওয়া থাকলে = Edit mode
+    category: Category | null;
     onSuccess: () => void;
 }
 
@@ -34,6 +34,7 @@ const CategoryFormDialog = ({
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [file, setFile] = useState<File | null>(null);
+    const [bannerFile, setBannerFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -41,6 +42,7 @@ const CategoryFormDialog = ({
             setName(category?.name ?? "");
             setDescription(category?.description ?? "");
             setFile(null);
+            setBannerFile(null);
         }
     }, [open, category]);
 
@@ -52,6 +54,7 @@ const CategoryFormDialog = ({
             const formData = new FormData();
             formData.append("data", JSON.stringify({ name, description }));
             if (file) formData.append("file", file);
+            if (bannerFile) formData.append("bannerImage", bannerFile);
 
             if (isEditMode && category) {
                 await api.patchForm(`/category/${category.id}`, formData);
@@ -97,18 +100,15 @@ const CategoryFormDialog = ({
                         <Textarea
                             id="description"
                             value={description}
-                            onChange={(
-                                e: React.ChangeEvent<HTMLTextAreaElement>,
-                            ) => setDescription(e.target.value)}
+                            onChange={(e) => setDescription(e.target.value)}
                             rows={3}
                         />
                     </div>
 
                     <div className="space-y-2">
                         <Label htmlFor="image">
-                            Image{" "}
-                            {isEditMode &&
-                                "(leave empty to keep current image)"}
+                            Icon Image{" "}
+                            {isEditMode && "(leave empty to keep current)"}
                         </Label>
                         <Input
                             id="image"
@@ -118,6 +118,28 @@ const CategoryFormDialog = ({
                                 setFile(e.target.files?.[0] ?? null)
                             }
                         />
+                        <p className="text-xs text-neutral-400">
+                            Small circular icon shown in the category slider.
+                        </p>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="bannerImage">
+                            Banner Image{" "}
+                            {isEditMode && "(leave empty to keep current)"}
+                        </Label>
+                        <Input
+                            id="bannerImage"
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) =>
+                                setBannerFile(e.target.files?.[0] ?? null)
+                            }
+                        />
+                        <p className="text-xs text-neutral-400">
+                            Wide banner shown at the top of this category&apos;s
+                            page.
+                        </p>
                     </div>
 
                     <DialogFooter>

@@ -23,6 +23,7 @@ import StatusBadge from "@/components/admin/order/StatusBadge";
 import OrderStatusDialog from "@/components/admin/order/OrderStatusDialog";
 import PaymentStatusDialog from "@/components/admin/order/PaymentStatusDialog";
 import Image from "next/image";
+import InlineStatusSelect from "@/components/shared/InlineStatusSelect";
 
 const ORDER_STATUS_OPTIONS: OrderStatus[] = [
     "PENDING",
@@ -154,31 +155,17 @@ const OrderDetailsPage = () => {
                         Order Status
                     </p>
                     <div className="mt-2 flex items-center justify-start gap-2 sm:justify-center">
-                        <StatusBadge
-                            label={order.orderStatus}
-                            colorClasses={orderStatusColors[order.orderStatus]}
-                        />
-                        <Select
-                            items={ORDER_STATUS_OPTIONS.map((s) => ({
+                        <InlineStatusSelect
+                            value={order.orderStatus}
+                            options={ORDER_STATUS_OPTIONS.map((s) => ({
                                 label: s,
                                 value: s,
+                                colorClasses: orderStatusColors[s],
                             }))}
-                            value={order.orderStatus}
                             onValueChange={(v) =>
                                 handleOrderStatusSelect(v as OrderStatus)
                             }
-                        >
-                            <SelectTrigger className="h-8 w-40 sm:w-44">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {ORDER_STATUS_OPTIONS.map((s) => (
-                                    <SelectItem key={s} value={s}>
-                                        {s}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        />
                     </div>
                 </div>
 
@@ -187,33 +174,17 @@ const OrderDetailsPage = () => {
                         Payment Status
                     </p>
                     <div className="mt-2 flex items-center justify-start gap-2 sm:justify-center">
-                        <StatusBadge
-                            label={order.paymentStatus}
-                            colorClasses={
-                                paymentStatusColors[order.paymentStatus]
-                            }
-                        />
-                        <Select
-                            items={PAYMENT_STATUS_OPTIONS.map((s) => ({
+                        <InlineStatusSelect
+                            value={order.paymentStatus}
+                            options={PAYMENT_STATUS_OPTIONS.map((s) => ({
                                 label: s,
                                 value: s,
+                                colorClasses: paymentStatusColors[s],
                             }))}
-                            value={order.paymentStatus}
                             onValueChange={(v) =>
                                 handlePaymentStatusSelect(v as PaymentStatus)
                             }
-                        >
-                            <SelectTrigger className="h-8 w-40 sm:w-44">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {PAYMENT_STATUS_OPTIONS.map((s) => (
-                                    <SelectItem key={s} value={s}>
-                                        {s}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        />
                     </div>
                 </div>
             </div>
@@ -269,6 +240,17 @@ const OrderDetailsPage = () => {
                                 <p className="text-xs text-neutral-400">
                                     {item.productCode} • Qty: {item.quantity}
                                 </p>
+                                {item.product?.thumbnailImage ? (
+                                    <Image
+                                        src={item.product.thumbnailImage}
+                                        alt={item.productName}
+                                        width={50}
+                                        height={50}
+                                        className="h-12 w-12 shrink-0 rounded-md object-cover"
+                                    />
+                                ) : (
+                                    <div className="h-12 w-12 shrink-0 rounded-md bg-muted" />
+                                )}
                             </div>
                             <p className="text-sm font-medium">
                                 ৳{(item.price * item.quantity).toLocaleString()}

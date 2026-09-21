@@ -20,6 +20,7 @@ import type { Category } from "@/types/category";
 import StatusBadge from "@/components/admin/order/StatusBadge";
 import DeleteProductDialog from "@/components/admin/product/DeleteProductDialog";
 import StockStatusDialog from "@/components/admin/product/StockStatusDialog";
+import InlineStatusSelect from "@/components/shared/InlineStatusSelect";
 
 const ALL_VALUE = "ALL";
 
@@ -306,48 +307,23 @@ const ProductsPage = () => {
                                 {/* ডান দিক — status + actions */}
                                 <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end sm:justify-center sm:gap-2">
                                     <div className="flex items-center gap-2">
-                                        <StatusBadge
-                                            label={
-                                                STOCK_LABELS[
-                                                    product.stockStatus
-                                                ]
-                                            }
-                                            colorClasses={
-                                                stockStatusColors[
-                                                    product.stockStatus
-                                                ]
-                                            }
-                                        />
-                                        <Select
-                                            items={STOCK_STATUS_OPTIONS.map(
+                                        <InlineStatusSelect
+                                            value={product.stockStatus}
+                                            options={STOCK_STATUS_OPTIONS.map(
                                                 (s) => ({
                                                     label: STOCK_LABELS[s],
                                                     value: s,
+                                                    colorClasses:
+                                                        stockStatusColors[s],
                                                 }),
                                             )}
-                                            value={product.stockStatus}
                                             onValueChange={(value) =>
-                                                value &&
                                                 handleStatusChange(
                                                     product,
                                                     value as ProductStockStatus,
                                                 )
                                             }
-                                        >
-                                            <SelectTrigger className="h-7 w-7 border-none p-0 [&>svg]:mx-auto" />
-                                            <SelectContent>
-                                                {STOCK_STATUS_OPTIONS.map(
-                                                    (s) => (
-                                                        <SelectItem
-                                                            key={s}
-                                                            value={s}
-                                                        >
-                                                            {STOCK_LABELS[s]}
-                                                        </SelectItem>
-                                                    ),
-                                                )}
-                                            </SelectContent>
-                                        </Select>
+                                        />
                                     </div>
 
                                     <div className="flex gap-1">

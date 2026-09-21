@@ -13,12 +13,15 @@ import {
     BarChart3,
     LogOut,
     Star,
+    ImageIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { showToast } from "@/lib/toast";
 import { useAuthStore } from "@/store/auth-store";
 import { SITE_NAME } from "@/lib/constants";
+import Image from "next/image";
+import Logo from "../../assets/images/kingToyCycle.png";
 
 const NAV_ITEMS = [
     { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
@@ -30,6 +33,7 @@ const NAV_ITEMS = [
     { label: "Staff", href: "/admin/staff", icon: Users },
     { label: "Reports", href: "/admin/reports", icon: BarChart3 },
     { label: "Reviews", href: "/admin/reviews", icon: Star },
+    { label: "Banners", href: "/admin/banners", icon: ImageIcon },
 ];
 
 interface AdminSidebarProps {
@@ -56,8 +60,10 @@ const AdminSidebar = ({ onNavigate }: AdminSidebarProps) => {
     return (
         <div className="flex h-full flex-col bg-white">
             <div className="border-b px-6 py-5">
-                <span className="text-lg font-bold">{SITE_NAME}</span>
-                <p className="text-xs text-neutral-500">Admin Panel</p>
+                <Image src={Logo} height={60} width={100} alt="logo" />
+                <p className="text-xl text-neutral-500 font-bold ">
+                    Admin Panel
+                </p>
             </div>
 
             <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { ShoppingCart, Search, Menu, X, User, Heart } from "lucide-react";
+import { ShoppingCart, Search, Menu, X, Heart } from "lucide-react";
 import Image from "next/image";
 
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,7 @@ import { api } from "@/lib/api";
 import { useCartStore } from "@/store/cart-store";
 import { SITE_NAME } from "@/lib/constants";
 import type { Product } from "@/types/product";
+import Logo from "@/assets/images/kingToyCycle.png";
 
 const NAV_LINKS = [
     { label: "Home", href: "/" },
@@ -39,31 +40,11 @@ export default function Header() {
     const [searchTerm, setSearchTerm] = useState("");
     const [allProducts, setAllProducts] = useState<Product[]>([]);
 
-    // --------------------------------------------------
+    // ==================================================
     // CART
-    // --------------------------------------------------
+    // ==================================================
 
     const totalItems = useCartStore((state) => state.totalItems());
-
-    /**
-     * Important:
-     *
-     * Zustand persist/localStorage data is not available
-     * during SSR.
-     *
-     * Server renders cart count as 0.
-     * After hydration, actual cart count is displayed.
-     *
-     * This prevents:
-     *
-     * Server:
-     * Cart — 0 items
-     *
-     * Client:
-     * Cart — 2 items
-     *
-     * hydration mismatch.
-     */
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -72,9 +53,9 @@ export default function Header() {
 
     const cartCount = mounted ? totalItems : 0;
 
-    // --------------------------------------------------
+    // ==================================================
     // FETCH PRODUCTS
-    // --------------------------------------------------
+    // ==================================================
 
     useEffect(() => {
         async function fetchProducts() {
@@ -89,17 +70,17 @@ export default function Header() {
         fetchProducts();
     }, []);
 
-    // --------------------------------------------------
+    // ==================================================
     // SEARCH
-    // --------------------------------------------------
+    // ==================================================
 
     const searchResults = allProducts.filter((product) =>
         product.name.toLowerCase().includes(searchTerm.toLowerCase()),
     );
 
-    // --------------------------------------------------
+    // ==================================================
     // SCROLL
-    // --------------------------------------------------
+    // ==================================================
 
     useEffect(() => {
         const handleScroll = () => {
@@ -113,54 +94,50 @@ export default function Header() {
         };
     }, []);
 
-    // --------------------------------------------------
+    // ==================================================
     // SEARCH DROPDOWN
-    // --------------------------------------------------
+    // ==================================================
 
     const renderSearchDropdown = (imageSize: number) => (
-        <ul className="absolute z-100 left-0 right-0 mt-1 bg-white border border-gray-100 shadow-lg rounded-xl max-h-72 overflow-y-auto">
+        <ul className="absolute left-0 right-0 z-100 mt-1 max-h-72 overflow-y-auto rounded-xl border border-gray-100 bg-white shadow-lg">
             {searchResults.length > 0 ? (
                 searchResults.map((product) => (
                     <li
                         key={product.id}
-                        className="hover:bg-gray-50 transition-colors duration-150"
+                        className="transition-colors duration-150 hover:bg-gray-50"
                     >
                         <Link
                             href={`/products/${product.id}`}
                             onClick={() => setSearchTerm("")}
-                            className="flex items-center justify-between px-3 py-2.5 gap-3"
+                            className="flex items-center justify-between gap-3 px-3 py-2.5"
                         >
-                            <div className="flex items-center gap-3 min-w-0">
+                            <div className="flex min-w-0 items-center gap-3">
                                 <Image
                                     src={product.thumbnailImage}
                                     alt={product.name}
                                     width={imageSize}
                                     height={imageSize}
-                                    className="rounded-md object-cover shrink-0"
+                                    className="shrink-0 rounded-md object-cover"
                                 />
 
-                                <p className="text-sm font-medium text-gray-800 truncate">
+                                <p className="truncate text-sm font-medium text-gray-800">
                                     {product.name}
                                 </p>
                             </div>
 
-                            <span className="text-sm font-semibold text-gray-900 shrink-0">
+                            <span className="shrink-0 text-sm font-semibold text-gray-900">
                                 ৳{product.discountPrice ?? product.regularPrice}
                             </span>
                         </Link>
                     </li>
                 ))
             ) : (
-                <li className="px-4 py-6 text-sm text-gray-400 text-center">
+                <li className="px-4 py-6 text-center text-sm text-gray-400">
                     No products found
                 </li>
             )}
         </ul>
     );
-
-    // --------------------------------------------------
-    // RENDER
-    // --------------------------------------------------
 
     return (
         <>
@@ -170,15 +147,15 @@ export default function Header() {
 
             <header
                 className={cn(
-                    "hidden md:block relative z-50 w-full bg-white border-b border-gray-100 transition-all duration-500 ease-in-out will-change-transform",
+                    "relative z-50 hidden w-full border-b border-gray-100 bg-white transition-all duration-500 ease-in-out will-change-transform md:block",
                     scrolled
-                        ? "max-h-0 opacity-0 overflow-hidden border-transparent"
+                        ? "max-h-0 overflow-hidden border-transparent opacity-0"
                         : "max-h-24 opacity-100",
                 )}
                 aria-hidden={scrolled}
             >
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center h-16 gap-4 md:gap-8">
+                    <div className="flex h-16 items-center gap-4 py-2 md:gap-8">
                         {/* LOGO */}
 
                         <Link
@@ -186,17 +163,20 @@ export default function Header() {
                             className="shrink-0 group"
                             aria-label={`${SITE_NAME} — Home`}
                         >
-                            <span className="text-2xl font-black tracking-[0.15em] text-black group-hover:opacity-70 transition-opacity duration-200">
-                                {SITE_NAME}
-                            </span>
+                            <Image
+                                src={Logo}
+                                height={100}
+                                width={120}
+                                alt="King Toy Cycle Logo"
+                            />
                         </Link>
 
                         {/* SEARCH */}
 
-                        <div className="flex-1 max-w-2xl mx-auto">
-                            <div className="relative group">
+                        <div className="mx-auto max-w-2xl flex-1">
+                            <div className="group relative">
                                 <Search
-                                    className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-black transition-colors duration-200"
+                                    className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 transition-colors duration-200 group-focus-within:text-black"
                                     aria-hidden
                                 />
 
@@ -208,10 +188,7 @@ export default function Header() {
                                         setSearchTerm(e.target.value)
                                     }
                                     placeholder="Search for toys, brands, categories..."
-                                    className="pl-10 pr-4 h-10 bg-gray-50 border-gray-200 rounded-full
-                                               focus-visible:ring-1 focus-visible:ring-black focus-visible:border-black
-                                               hover:border-gray-300 hover:bg-white
-                                               transition-all duration-200 text-sm placeholder:text-gray-400"
+                                    className="h-10 rounded-full border-gray-200 bg-gray-50 pl-10 pr-4 text-sm placeholder:text-gray-400 hover:border-gray-300 hover:bg-white focus-visible:border-black focus-visible:ring-1 focus-visible:ring-black"
                                     aria-label="Search products"
                                 />
 
@@ -221,7 +198,7 @@ export default function Header() {
 
                         {/* ACTIONS */}
 
-                        <div className="shrink-0 flex items-center gap-1">
+                        <div className="flex shrink-0 items-center gap-1">
                             {/* WISHLIST */}
 
                             <Link href="/wishlist">
@@ -242,7 +219,7 @@ export default function Header() {
 
                             <Link
                                 href="/cart"
-                                className="relative inline-flex items-center justify-center h-9 w-9 rounded-full hover:bg-gray-100"
+                                className="relative inline-flex h-9 w-9 items-center justify-center rounded-full hover:bg-gray-100"
                                 aria-label={`Cart — ${cartCount} items`}
                             >
                                 <ShoppingCart
@@ -251,7 +228,7 @@ export default function Header() {
                                 />
 
                                 {cartCount > 0 && (
-                                    <Badge className="absolute -top-0.5 -right-0.5 h-4.5 min-w-4.5 px-1 flex items-center justify-center text-[10px] font-semibold bg-black text-white border-2 border-white rounded-full leading-none">
+                                    <Badge className="absolute -right-0.5 -top-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full border-2 border-white bg-black px-1 text-[10px] font-semibold leading-none text-white">
                                         {cartCount}
                                     </Badge>
                                 )}
@@ -265,14 +242,17 @@ export default function Header() {
                 MOBILE: TOP BAR
             ================================================== */}
 
-            <div className="md:hidden w-full bg-white border-b border-gray-100">
-                <div className="flex items-center justify-between px-4 h-14">
+            <div className="w-full border-b border-gray-100 bg-white md:hidden">
+                <div className="flex h-14 items-center justify-between px-4">
                     {/* LOGO */}
 
                     <Link href="/" aria-label={`${SITE_NAME} — Home`}>
-                        <span className="text-xl font-black tracking-[0.15em] text-black">
-                            {SITE_NAME}
-                        </span>
+                        <Image
+                            src={Logo}
+                            height={60}
+                            width={100}
+                            alt="King Toy Cycle Logo"
+                        />
                     </Link>
 
                     <div className="flex items-center gap-1">
@@ -280,7 +260,7 @@ export default function Header() {
 
                         <Link
                             href="/cart"
-                            className="relative inline-flex items-center justify-center h-9 w-9 rounded-full hover:bg-gray-100"
+                            className="relative inline-flex h-9 w-9 items-center justify-center rounded-full hover:bg-gray-100"
                             aria-label={`Cart — ${cartCount} items`}
                         >
                             <ShoppingCart
@@ -289,7 +269,7 @@ export default function Header() {
                             />
 
                             {cartCount > 0 && (
-                                <span className="absolute top-0.5 right-0.5 h-4 min-w-4 px-0.75 flex items-center justify-center text-[9px] font-bold bg-black text-white rounded-full leading-none border-[1.5px] border-white">
+                                <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full border-[1.5px] border-white bg-black px-0.75 text-[9px] font-bold leading-none text-white">
                                     {cartCount}
                                 </span>
                             )}
@@ -320,19 +300,27 @@ export default function Header() {
 
                             <SheetContent side="left" className="w-72 p-0">
                                 <SheetTitle className="sr-only">
-                                    {SITE_NAME} Menu
+                                    <Image
+                                        src={Logo}
+                                        height={60}
+                                        width={100}
+                                        alt="King Toy Cycle Logo"
+                                    />
                                 </SheetTitle>
 
-                                <div className="flex flex-col h-full">
+                                <div className="flex h-full flex-col">
                                     {/* MOBILE MENU HEADER */}
 
-                                    <div className="flex items-center px-6 py-5 border-b border-gray-100">
-                                        <span className="text-xl font-black tracking-[0.15em]">
-                                            {SITE_NAME}
-                                        </span>
+                                    <div className="flex items-center border-b border-gray-100 px-6 py-5">
+                                        <Image
+                                            src={Logo}
+                                            height={100}
+                                            width={100}
+                                            alt="King Toy Cycle Logo"
+                                        />
                                     </div>
 
-                                    {/* NAV LINKS */}
+                                    {/* MOBILE NAV */}
 
                                     <nav className="flex-1 overflow-y-auto px-4 py-3">
                                         <ul role="list" className="space-y-0.5">
@@ -343,8 +331,7 @@ export default function Header() {
                                                         onClick={() =>
                                                             setMobileOpen(false)
                                                         }
-                                                        className="flex items-center px-3 py-3 text-base font-medium text-gray-700
-                                                                   hover:text-black hover:bg-gray-50 rounded-lg transition-colors duration-150"
+                                                        className="flex items-center rounded-lg px-3 py-3 text-base font-medium text-gray-700 transition-colors duration-150 hover:bg-gray-50 hover:text-black"
                                                     >
                                                         {link.label}
                                                     </Link>
@@ -353,9 +340,9 @@ export default function Header() {
                                         </ul>
                                     </nav>
 
-                                    {/* VIEW CART */}
+                                    {/* MOBILE CART */}
 
-                                    <div className="px-6 py-5 border-t border-gray-100">
+                                    <div className="border-t border-gray-100 px-6 py-5">
                                         <Link
                                             href="/cart"
                                             onClick={() => setMobileOpen(false)}
@@ -363,7 +350,7 @@ export default function Header() {
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                className="w-full gap-2 rounded-full text-sm relative"
+                                                className="relative w-full gap-2 rounded-full text-sm"
                                             >
                                                 <ShoppingCart
                                                     className="h-4 w-4"
@@ -371,7 +358,7 @@ export default function Header() {
                                                 />
                                                 View Cart
                                                 {cartCount > 0 && (
-                                                    <span className="absolute -top-1.5 -right-1.5 h-4.5 min-w-4.5 px-1 flex items-center justify-center text-[10px] font-bold bg-black text-white rounded-full border-2 border-white leading-none">
+                                                    <span className="absolute -right-1.5 -top-1.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full border-2 border-white bg-black px-1 text-[10px] font-bold leading-none text-white">
                                                         {cartCount}
                                                     </span>
                                                 )}
@@ -389,7 +376,7 @@ export default function Header() {
                 <div className="px-4 pb-2.5">
                     <div className="relative">
                         <Search
-                            className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
+                            className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
                             aria-hidden
                         />
 
@@ -398,8 +385,7 @@ export default function Header() {
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             placeholder="Search products..."
-                            className="pl-10 pr-4 h-9 bg-gray-50 border-gray-200 rounded-full text-sm
-                                       focus-visible:ring-1 focus-visible:ring-black focus-visible:border-black"
+                            className="h-9 rounded-full border-gray-200 bg-gray-50 pl-10 pr-4 text-sm focus-visible:border-black focus-visible:ring-1 focus-visible:ring-black"
                             aria-label="Search products"
                         />
 
@@ -410,11 +396,12 @@ export default function Header() {
 
             {/* ==================================================
                 DESKTOP: BOTTOM NAV
+                MENU IS ALWAYS CENTERED
             ================================================== */}
 
             <nav
                 className={cn(
-                    "hidden md:block w-full bg-white border-b border-gray-100 z-40 transition-all duration-300",
+                    "z-40 hidden w-full border-b border-gray-100 bg-white transition-all duration-300 md:block",
                     scrolled
                         ? "sticky top-0 shadow-[0_1px_8px_rgba(0,0,0,0.06)]"
                         : "",
@@ -422,45 +409,50 @@ export default function Header() {
                 aria-label="Main navigation"
             >
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center h-12 gap-4">
-                        {/* STICKY LOGO */}
+                    {/* relative container keeps menu perfectly centered */}
+
+                    <div className="relative flex h-12 items-center justify-center">
+                        {/* ==================================================
+                            STICKY LOGO - LEFT
+                        ================================================== */}
 
                         <div
                             className={cn(
-                                "shrink-0 transition-all duration-300 overflow-hidden",
+                                "absolute left-0 shrink-0 overflow-hidden transition-all duration-300",
                                 scrolled
-                                    ? "w-auto opacity-100 mr-2"
+                                    ? "w-auto opacity-100"
                                     : "w-0 opacity-0",
                             )}
                             aria-hidden={!scrolled}
                         >
                             <Link href="/" tabIndex={scrolled ? 0 : -1}>
-                                <span className="text-lg font-black tracking-[0.15em] text-black whitespace-nowrap">
-                                    {SITE_NAME}
-                                </span>
+                                <Image
+                                    src={Logo}
+                                    height={60}
+                                    width={90}
+                                    alt="King Toy Cycle Logo"
+                                />
                             </Link>
                         </div>
 
-                        {/* NAVIGATION LINKS */}
+                        {/* ==================================================
+                            CENTER NAVIGATION
+                        ================================================== */}
 
                         <ul
-                            className="flex items-center gap-0.5 flex-1"
+                            className="flex items-center justify-center gap-0.5"
                             role="list"
                         >
                             {NAV_LINKS.map((link) => (
                                 <li key={link.href}>
                                     <Link
                                         href={link.href}
-                                        className="relative px-3.5 py-2 text-sm font-medium text-gray-600
-                                                   hover:text-black transition-colors duration-150
-                                                   group flex items-center"
+                                        className="group relative flex items-center px-3.5 py-2 text-sm font-medium text-gray-600 transition-colors duration-150 hover:text-black"
                                     >
                                         {link.label}
 
                                         <span
-                                            className="absolute bottom-1 left-1/2 -translate-x-1/2
-                                                       h-[1.5px] w-0 bg-black rounded-full
-                                                       transition-all duration-300 group-hover:w-[calc(100%-1.75rem)]"
+                                            className="absolute bottom-1 left-1/2 h-[1.5px] w-0 -translate-x-1/2 rounded-full bg-black transition-all duration-300 group-hover:w-[calc(100%-1.75rem)]"
                                             aria-hidden
                                         />
                                     </Link>
@@ -468,14 +460,16 @@ export default function Header() {
                             ))}
                         </ul>
 
-                        {/* RIGHT ACTIONS */}
+                        {/* ==================================================
+                            RIGHT ACTIONS - SEARCH + CART
+                        ================================================== */}
 
                         <div
                             className={cn(
-                                "flex items-center gap-1 shrink-0 transition-all duration-300",
+                                "absolute right-0 flex shrink-0 items-center gap-1 transition-all duration-300",
                                 scrolled
-                                    ? "opacity-100 pointer-events-auto"
-                                    : "opacity-0 pointer-events-none",
+                                    ? "pointer-events-auto opacity-100"
+                                    : "pointer-events-none opacity-0",
                             )}
                             aria-hidden={!scrolled}
                         >
@@ -496,7 +490,7 @@ export default function Header() {
 
                             <Link
                                 href="/cart"
-                                className="relative inline-flex items-center justify-center h-8 w-8 rounded-full hover:bg-gray-100"
+                                className="relative inline-flex h-8 w-8 items-center justify-center rounded-full hover:bg-gray-100"
                                 aria-label={`Cart — ${cartCount} items`}
                                 tabIndex={scrolled ? 0 : -1}
                             >
@@ -506,7 +500,7 @@ export default function Header() {
                                 />
 
                                 {cartCount > 0 && (
-                                    <span className="absolute top-0.5 right-0.5 h-3.75 min-w-3.75 px-0.75 flex items-center justify-center text-[9px] font-bold bg-black text-white rounded-full border-[1.5px] border-white leading-none">
+                                    <span className="absolute right-0.5 top-0.5 flex h-3.75 min-w-3.75 items-center justify-center rounded-full border-[1.5px] border-white bg-black px-0.75 text-[9px] font-bold leading-none text-white">
                                         {cartCount}
                                     </span>
                                 )}
@@ -522,16 +516,16 @@ export default function Header() {
 
             {searchOpen && (
                 <div
-                    className="fixed inset-0 z-60 bg-white/95 backdrop-blur-sm flex flex-col"
+                    className="fixed inset-0 z-60 flex flex-col bg-white/95 backdrop-blur-sm"
                     role="dialog"
                     aria-label="Search"
                     aria-modal
                 >
-                    <div className="container mx-auto px-4 sm:px-6 py-4">
+                    <div className="container mx-auto px-4 py-4 sm:px-6">
                         <div className="flex items-center gap-3">
                             <div className="relative flex-1">
                                 <Search
-                                    className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"
+                                    className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"
                                     aria-hidden
                                 />
 
@@ -543,8 +537,7 @@ export default function Header() {
                                     }
                                     placeholder="Search for toys, brands, categories..."
                                     autoFocus
-                                    className="pl-12 h-12 text-base bg-gray-50 border-gray-200 rounded-xl
-                                               focus-visible:ring-1 focus-visible:ring-black focus-visible:border-black"
+                                    className="h-12 rounded-xl border-gray-200 bg-gray-50 pl-12 text-base focus-visible:border-black focus-visible:ring-1 focus-visible:ring-black"
                                 />
 
                                 {searchTerm && renderSearchDropdown(48)}
@@ -553,7 +546,7 @@ export default function Header() {
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-10 w-10 rounded-full shrink-0"
+                                className="h-10 w-10 shrink-0 rounded-full"
                                 onClick={() => {
                                     setSearchOpen(false);
                                     setSearchTerm("");

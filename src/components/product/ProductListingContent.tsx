@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { SlidersHorizontal } from "lucide-react";
 import {
     Select,
     SelectContent,
@@ -9,6 +10,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import {
+    Sheet,
+    SheetContent,
+    SheetTrigger,
+    SheetTitle,
+} from "@/components/ui/sheet";
 import { api } from "@/lib/api";
 import { showToast } from "@/lib/toast";
 import type { Product } from "@/types/product";
@@ -30,7 +38,8 @@ interface ProductListingContentProps {
     fixedCategoryId?: string;
     fixedCategoryName?: string;
     basePath: string;
-    initialProducts: Product[]; // ⬅️ নতুন — server থেকে আসা প্রথম data
+    initialProducts: Product[];
+    initialCategories: Category[];
 }
 
 const ProductListingContent = ({
@@ -38,6 +47,7 @@ const ProductListingContent = ({
     fixedCategoryName,
     basePath,
     initialProducts,
+    initialCategories,
 }: ProductListingContentProps) => {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -50,14 +60,13 @@ const ProductListingContent = ({
     const sort = searchParams.get("sort") ?? "newest";
     const limit = searchParams.get("limit") ?? "40";
 
-    // প্রথমবার server থেকে আসা data দিয়েই state শুরু হবে — খালি array না, তাই SEO-friendly HTML প্রথমেই থাকে
     const [products, setProducts] = useState<Product[]>(initialProducts);
     const [allCategoryProducts, setAllCategoryProducts] =
         useState<Product[]>(initialProducts);
-    const [categories, setCategories] = useState<Category[]>([]);
+    const [categories, setCategories] = useState<Category[]>(initialCategories);
     const [loading, setLoading] = useState(false);
+    const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
-    // প্রথম render-এ client-side fetch skip করার জন্য — কারণ initialProducts already আছে
     const isFirstRender = useRef(true);
 
     const updateParams = useCallback(
@@ -76,19 +85,6 @@ const ProductListingContent = ({
     );
 
     useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const data = await api.get<Category[]>("/category");
-                setCategories(data.filter((c) => c.status === "ACTIVE"));
-            } catch {
-                // skip
-            }
-        };
-        fetchCategories();
-    }, []);
-
-    useEffect(() => {
-        // প্রথমবার skip — initialProducts থেকেই facet বানানো হয়েছে
         if (isFirstRender.current) return;
 
         const fetchFacetProducts = async () => {
@@ -129,7 +125,6 @@ const ProductListingContent = ({
     }, [categoryId, color, minPrice, maxPrice, minRating, sort, limit]);
 
     useEffect(() => {
-        // প্রথমবার fetch skip করি — server থেকেই initialProducts এসেছে, duplicate call দরকার নেই
         if (isFirstRender.current) {
             isFirstRender.current = false;
             return;
@@ -148,37 +143,45 @@ const ProductListingContent = ({
             : [{ label: "All Products" }]),
     ];
 
+    const activeFilterCount = [color, minPrice, maxPrice, minRating].filter(
+        Boolean,
+    ).length;
+
+    const handleCategoryChange = (id: string | null) => {
+        if (fixedCategoryId) {
+            const target = categories.find((c) => c.id === id);
+            if (target) router.push(`/category/${target.slug}`);
+            else router.push("/products");
+        } else {
+            updateParams({ category: id });
+        }
+    };
+
+    const filterSidebarProps = {
+        categories,
+        availableColors,
+        selectedCategoryId: fixedCategoryId ? null : categoryId,
+        selectedColor: color,
+        minPrice,
+        maxPrice,
+        minRating,
+        onCategoryChange: handleCategoryChange,
+        onColorChange: (c: string | null) => updateParams({ color: c }),
+        onPriceChange: (min: string, max: string) =>
+            updateParams({ minPrice: min, maxPrice: max }),
+        onRatingChange: (r: string | null) => updateParams({ minRating: r }),
+        onClearAll: () => router.push(fixedCategoryId ? basePath : "/products"),
+    };
+
     return (
         <div className="mx-auto max-w-7xl px-4 py-4">
             <Breadcrumb items={breadcrumbItems} />
 
             <div className="mt-4 flex flex-col gap-6 lg:flex-row">
-                <ProductFilterSidebar
-                    categories={categories}
-                    availableColors={availableColors}
-                    selectedCategoryId={fixedCategoryId ? null : categoryId}
-                    selectedColor={color}
-                    minPrice={minPrice}
-                    maxPrice={maxPrice}
-                    minRating={minRating}
-                    onCategoryChange={(id) => {
-                        if (fixedCategoryId) {
-                            const target = categories.find((c) => c.id === id);
-                            if (target) router.push(`/category/${target.slug}`);
-                            else router.push("/products");
-                        } else {
-                            updateParams({ category: id });
-                        }
-                    }}
-                    onColorChange={(c) => updateParams({ color: c })}
-                    onPriceChange={(min, max) =>
-                        updateParams({ minPrice: min, maxPrice: max })
-                    }
-                    onRatingChange={(r) => updateParams({ minRating: r })}
-                    onClearAll={() =>
-                        router.push(fixedCategoryId ? basePath : "/products")
-                    }
-                />
+                {/* Desktop sidebar — শুধু lg+ এ দেখা যাবে */}
+                <div className="hidden lg:block">
+                    <ProductFilterSidebar {...filterSidebarProps} />
+                </div>
 
                 <div className="flex-1">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -187,12 +190,46 @@ const ProductListingContent = ({
                         </p>
 
                         <div className="flex gap-2">
+                            {/* Mobile/Tablet filter button — lg-এর নিচে দেখা যাবে */}
+                            <Sheet
+                                open={mobileFilterOpen}
+                                onOpenChange={setMobileFilterOpen}
+                            >
+                                <SheetTrigger
+                                    render={
+                                        <Button
+                                            variant="outline"
+                                            className="h-9 gap-1.5 text-sm lg:hidden"
+                                        />
+                                    }
+                                >
+                                    <SlidersHorizontal className="h-4 w-4" />
+                                    Filters
+                                    {activeFilterCount > 0 && (
+                                        <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-neutral-900 text-[10px] font-medium text-white">
+                                            {activeFilterCount}
+                                        </span>
+                                    )}
+                                </SheetTrigger>
+                                <SheetContent
+                                    side="left"
+                                    className="w-80 overflow-y-auto p-4"
+                                >
+                                    <SheetTitle>Filters</SheetTitle>
+                                    <div className="mt-4">
+                                        <ProductFilterSidebar
+                                            {...filterSidebarProps}
+                                        />
+                                    </div>
+                                </SheetContent>
+                            </Sheet>
+
                             <Select
                                 items={SORT_OPTIONS}
                                 value={sort}
                                 onValueChange={(v) => updateParams({ sort: v })}
                             >
-                                <SelectTrigger className="h-9 w-44 text-sm">
+                                <SelectTrigger className="h-9 w-40 text-sm sm:w-44">
                                     <SelectValue placeholder="Sort by" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -217,7 +254,7 @@ const ProductListingContent = ({
                                     updateParams({ limit: v })
                                 }
                             >
-                                <SelectTrigger className="h-9 w-28 text-sm">
+                                <SelectTrigger className="hidden h-9 w-28 text-sm sm:flex">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>

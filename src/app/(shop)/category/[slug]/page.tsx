@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import type { Metadata } from "next";
 import CategorySlider from "@/components/shared/CategorySlider";
 import ProductListingContent from "@/components/product/ProductListingContent";
@@ -31,6 +32,15 @@ const getInitialProducts = async (categoryId: string): Promise<Product[]> => {
     }
 };
 
+const getInitialCategories = async (): Promise<Category[]> => {
+    try {
+        const data = await api.get<Category[]>("/category", 300);
+        return data.filter((c) => c.status === "ACTIVE");
+    } catch {
+        return [];
+    }
+};
+
 export const generateMetadata = async ({
     params,
 }: CategoryPageProps): Promise<Metadata> => {
@@ -43,15 +53,19 @@ export const generateMetadata = async ({
 
     return {
         title: category.name,
-        alternates: { canonical: `/category/${category.slug}` },
         description:
             category.description ||
             `Shop the best ${category.name} at ${SITE_NAME}. Fast delivery across Bangladesh, cash on delivery available.`,
+        alternates: { canonical: `/category/${category.slug}` },
         openGraph: {
             title: category.name,
             description:
                 category.description || `Shop ${category.name} at ${SITE_NAME}`,
-            images: category.image ? [category.image] : undefined,
+            images: category.bannerimage
+                ? [category.bannerimage]
+                : category.image
+                  ? [category.image]
+                  : undefined,
         },
     };
 };
@@ -64,11 +78,28 @@ const CategoryPage = async ({ params }: CategoryPageProps) => {
         notFound();
     }
 
-    const initialProducts = await getInitialProducts(category.id);
+    const [initialProducts, initialCategories] = await Promise.all([
+        getInitialProducts(category.id),
+        getInitialCategories(),
+    ]);
 
     return (
         <div>
-            <CategorySlider />
+            <CategorySlider categories={initialCategories} />
+
+            {/* {category.bannerimage && (
+                <div className="relative aspect-16/5 w-full sm:aspect-21/5 ">
+                    <Image
+                        src={category.bannerimage}
+                        alt={category.name}
+                        fill
+                        priority
+                        className="object-cover"
+                        sizes="100vw"
+                    />
+                </div>
+            )} */}
+
             <Suspense
                 fallback={
                     <p className="py-16 text-center text-sm text-neutral-500">
@@ -81,6 +112,7 @@ const CategoryPage = async ({ params }: CategoryPageProps) => {
                     fixedCategoryName={category.name}
                     basePath={`/category/${category.slug}`}
                     initialProducts={initialProducts}
+                    initialCategories={initialCategories}
                 />
             </Suspense>
         </div>

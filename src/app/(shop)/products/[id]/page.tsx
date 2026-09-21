@@ -13,6 +13,7 @@ import TrackProductView from "@/components/product/TrackProductView";
 import StarRatingDisplay from "@/components/admin/review/StarRatingDisplay";
 import { Separator } from "@/components/ui/separator";
 import { Phone, MessageCircle } from "lucide-react";
+import ProductCardSlider from "@/components/product/ProductCardSlider";
 
 interface ProductPageProps {
     params: Promise<{ id: string }>;
@@ -29,6 +30,33 @@ const getProduct = async (id: string): Promise<Product | null> => {
 const getReviews = async (productId: string): Promise<Review[]> => {
     try {
         return await api.get<Review[]>(`/review/product/${productId}`, 60);
+    } catch {
+        return [];
+    }
+};
+
+const getRelatedProducts = async (
+    categoryId: string,
+    excludeId: string,
+): Promise<Product[]> => {
+    try {
+        const products = await api.get<Product[]>(
+            `/product?categoryId=${categoryId}&limit=13`,
+            60,
+        );
+        return products.filter((p) => p.id !== excludeId).slice(0, 12);
+    } catch {
+        return [];
+    }
+};
+
+const getTrendingProducts = async (excludeId: string): Promise<Product[]> => {
+    try {
+        const products = await api.get<Product[]>(
+            "/product?featured=true&limit=13",
+            60,
+        );
+        return products.filter((p) => p.id !== excludeId).slice(0, 12);
     } catch {
         return [];
     }
@@ -72,6 +100,13 @@ const ProductPage = async ({ params }: ProductPageProps) => {
     if (!product) {
         notFound();
     }
+
+    const [relatedProducts, trendingProducts] = await Promise.all([
+        product.categoryId
+            ? getRelatedProducts(product.categoryId, product.id)
+            : Promise.resolve([]),
+        getTrendingProducts(product.id),
+    ]);
 
     const allImages = [product.thumbnailImage, ...product.images];
     const hasDiscount = Boolean(product.discountPrice);
@@ -216,8 +251,6 @@ const ProductPage = async ({ params }: ProductPageProps) => {
 
                     <AddToCartSection product={product} />
 
-                    {/* ekhane ekta buy now button dew jetay click korle sorasori check oi product er order page e niye jabe. check out page e product er id, name, price, quantity pass hobe. */}
-
                     <Separator className="my-4" />
 
                     <Link
@@ -252,8 +285,8 @@ const ProductPage = async ({ params }: ProductPageProps) => {
                     </div>
                     <div className="p-2 my-2 text-center text-sm md:text-lg bg-orange-400 text-white font-semibold italic rounded-lg animate__animated animate__backInRight animate__slow">
                         <h1>
-                            অর্ডার করার ২-৩ দিনের মধ্যে পণ্য ডেলিভারি সম্পন্ন
-                            করা হয়।
+                            অর্ডার করার ২-৩ কার্যদিবসের মধ্যে পণ্য ডেলিভারি
+                            সম্পন্ন করা হয়।
                         </h1>
                     </div>
                 </div>
@@ -273,6 +306,25 @@ const ProductPage = async ({ params }: ProductPageProps) => {
             <Separator className="my-6" />
 
             <ProductReviews reviews={reviews} />
+            {relatedProducts.length > 0 && (
+                <>
+                    <Separator className="my-2" />
+                    <ProductCardSlider
+                        products={relatedProducts}
+                        title="You May Also Like"
+                    />
+                </>
+            )}
+
+            {trendingProducts.length > 0 && (
+                <>
+                    <Separator className="my-2" />
+                    <ProductCardSlider
+                        products={trendingProducts}
+                        title="Trending Products"
+                    />
+                </>
+            )}
         </div>
     );
 };

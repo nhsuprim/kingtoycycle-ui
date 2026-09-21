@@ -1,8 +1,9 @@
 "use client";
+
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Search, X, Eye, Package } from "lucide-react";
+import { Search, X, Eye, Package, CalendarDays } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -85,6 +86,14 @@ const OrdersPage = () => {
         useState<PaymentStatusFilter>(ALL_VALUE);
 
     // ==================================================
+    // NEW: Date Filters
+    // ==================================================
+
+    const [dateFrom, setDateFrom] = useState("");
+
+    const [dateTo, setDateTo] = useState("");
+
+    // ==================================================
     // Debounce Phone Search
     // ==================================================
 
@@ -106,17 +115,26 @@ const OrdersPage = () => {
         try {
             const params = new URLSearchParams();
 
+            // --------------------------------------------------
             // Phone
+            // --------------------------------------------------
+
             if (phoneSearch.trim()) {
                 params.set("phone", phoneSearch.trim());
             }
 
+            // --------------------------------------------------
             // Order Status
+            // --------------------------------------------------
+
             if (orderStatusFilter !== ALL_VALUE) {
                 params.set("orderStatus", orderStatusFilter);
             }
 
+            // --------------------------------------------------
             // Payment Status
+            // --------------------------------------------------
+
             if (paymentStatusFilter !== ALL_VALUE) {
                 params.set("paymentStatus", paymentStatusFilter);
             }
@@ -156,7 +174,43 @@ const OrdersPage = () => {
         setOrderStatusFilter(ALL_VALUE);
 
         setPaymentStatusFilter(ALL_VALUE);
+
+        // NEW: Clear date filters
+        setDateFrom("");
+        setDateTo("");
     };
+
+    // ==================================================
+    // Date Filter
+    // ==================================================
+
+    const filteredOrders = orders.filter((order) => {
+        if (!dateFrom && !dateTo) {
+            return true;
+        }
+
+        const orderDate = new Date(order.createdAt);
+
+        // Start of selected From date
+        if (dateFrom) {
+            const fromDate = new Date(`${dateFrom}T00:00:00`);
+
+            if (orderDate < fromDate) {
+                return false;
+            }
+        }
+
+        // End of selected To date
+        if (dateTo) {
+            const toDate = new Date(`${dateTo}T23:59:59.999`);
+
+            if (orderDate > toDate) {
+                return false;
+            }
+        }
+
+        return true;
+    });
 
     // ==================================================
     // Active Filters
@@ -165,7 +219,9 @@ const OrdersPage = () => {
     const hasActiveFilters =
         phoneSearch !== "" ||
         orderStatusFilter !== ALL_VALUE ||
-        paymentStatusFilter !== ALL_VALUE;
+        paymentStatusFilter !== ALL_VALUE ||
+        dateFrom !== "" ||
+        dateTo !== "";
 
     // ==================================================
     // Loading State
@@ -206,8 +262,8 @@ const OrdersPage = () => {
                     <Package className="h-4 w-4" />
 
                     <span>
-                        {orders.length}{" "}
-                        {orders.length === 1 ? "Order" : "Orders"}
+                        {filteredOrders.length}{" "}
+                        {filteredOrders.length === 1 ? "Order" : "Orders"}
                     </span>
                 </div>
             </div>
@@ -217,8 +273,10 @@ const OrdersPage = () => {
             ================================================== */}
 
             <div className="rounded-lg border bg-background p-2.5 sm:p-4 md:p-5">
-                <div className="grid min-w-0 grid-cols-1 gap-2.5 sm:gap-3 md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(160px,200px)_minmax(160px,200px)_auto]">
-                    {/* Phone Search */}
+                <div className="grid min-w-0 grid-cols-1 gap-2.5 sm:gap-3 md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(150px,180px)_minmax(150px,180px)_minmax(140px,160px)_minmax(140px,160px)_auto]">
+                    {/* ==================================================
+                        Phone Search
+                    ================================================== */}
 
                     <div className="relative min-w-0">
                         <Search
@@ -234,7 +292,9 @@ const OrdersPage = () => {
                         />
                     </div>
 
-                    {/* Order Status */}
+                    {/* ==================================================
+                        Order Status
+                    ================================================== */}
 
                     <Select
                         value={orderStatusFilter}
@@ -250,7 +310,7 @@ const OrdersPage = () => {
 
                         <SelectContent>
                             <SelectItem value={ALL_VALUE}>
-                                All Order Status
+                                ALL (Order Status)
                             </SelectItem>
 
                             {ORDER_STATUS_OPTIONS.map((status) => (
@@ -261,7 +321,9 @@ const OrdersPage = () => {
                         </SelectContent>
                     </Select>
 
-                    {/* Payment Status */}
+                    {/* ==================================================
+                        Payment Status
+                    ================================================== */}
 
                     <Select
                         value={paymentStatusFilter}
@@ -277,7 +339,7 @@ const OrdersPage = () => {
 
                         <SelectContent>
                             <SelectItem value={ALL_VALUE}>
-                                All Payment Status
+                                ALL (Payment Status)
                             </SelectItem>
 
                             {PAYMENT_STATUS_OPTIONS.map((status) => (
@@ -288,14 +350,56 @@ const OrdersPage = () => {
                         </SelectContent>
                     </Select>
 
-                    {/* Clear */}
+                    {/* ==================================================
+                        NEW: Date From
+                    ================================================== */}
+
+                    <div className="relative min-w-0">
+                        <CalendarDays
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                            size={17}
+                        />
+
+                        <Input
+                            type="date"
+                            value={dateFrom}
+                            max={dateTo || undefined}
+                            onChange={(e) => setDateFrom(e.target.value)}
+                            className="h-10 w-full pl-10"
+                            aria-label="From date"
+                        />
+                    </div>
+
+                    {/* ==================================================
+                        NEW: Date To
+                    ================================================== */}
+
+                    <div className="relative min-w-0">
+                        <CalendarDays
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                            size={17}
+                        />
+
+                        <Input
+                            type="date"
+                            value={dateTo}
+                            min={dateFrom || undefined}
+                            onChange={(e) => setDateTo(e.target.value)}
+                            className="h-10 w-full pl-10"
+                            aria-label="To date"
+                        />
+                    </div>
+
+                    {/* ==================================================
+                        Clear
+                    ================================================== */}
 
                     {hasActiveFilters && (
                         <Button
                             type="button"
                             variant="outline"
                             onClick={handleClearFilters}
-                            className="h-10 w-full gap-2 md:col-span-2 lg:col-span-1 lg:w-auto"
+                            className="h-10 w-full gap-2 lg:w-auto"
                         >
                             <X size={16} />
 
@@ -303,6 +407,24 @@ const OrdersPage = () => {
                         </Button>
                     )}
                 </div>
+
+                {/* ==================================================
+                    Date Filter Info
+                ================================================== */}
+
+                {(dateFrom || dateTo) && (
+                    <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        <CalendarDays size={14} />
+
+                        <span>
+                            {dateFrom && dateTo
+                                ? `Orders from ${dateFrom} to ${dateTo}`
+                                : dateFrom
+                                  ? `Orders from ${dateFrom}`
+                                  : `Orders until ${dateTo}`}
+                        </span>
+                    </div>
+                )}
             </div>
 
             {/* ==================================================
@@ -315,10 +437,6 @@ const OrdersPage = () => {
                     <table className="w-full min-w-225 table-auto">
                         <thead className="border-b bg-muted/50">
                             <tr>
-                                {/* <th className="whitespace-nowrap px-3 py-3 text-left text-xs font-medium sm:px-4 sm:text-sm">
-                                    Order
-                                </th> */}
-
                                 <th className="whitespace-nowrap px-3 py-3 text-left text-xs font-medium sm:px-4 sm:text-sm">
                                     Customer
                                 </th>
@@ -350,17 +468,17 @@ const OrdersPage = () => {
                         </thead>
 
                         <tbody className="divide-y">
-                            {orders.length === 0 ? (
+                            {filteredOrders.length === 0 ? (
                                 <tr>
                                     <td
-                                        colSpan={8}
+                                        colSpan={7}
                                         className="h-32 text-center text-sm text-muted-foreground"
                                     >
                                         No orders found.
                                     </td>
                                 </tr>
                             ) : (
-                                orders.map((order) => {
+                                filteredOrders.map((order) => {
                                     const previewItems = order.items.slice(
                                         0,
                                         MAX_PREVIEW_ITEMS,
@@ -376,18 +494,6 @@ const OrdersPage = () => {
                                             key={order.id}
                                             className="transition-colors hover:bg-muted/30"
                                         >
-                                            {/* Order */}
-
-                                            {/* <td className="px-3 py-4 align-top sm:px-4">
-                                                <div className="whitespace-nowrap font-medium">
-                                                    {order.orderNumber}
-                                                </div>
-
-                                                <div className="mt-1 text-xs text-muted-foreground">
-                                                    {order.paymentMethod}
-                                                </div>
-                                            </td> */}
-
                                             {/* Customer */}
 
                                             <td className="max-w-55 px-3 py-4 align-top sm:px-4">
@@ -543,12 +649,12 @@ const OrdersPage = () => {
             ================================================== */}
 
             <div className="w-full min-w-0 space-y-3 md:hidden">
-                {orders.length === 0 ? (
+                {filteredOrders.length === 0 ? (
                     <div className="flex min-h-40 items-center justify-center rounded-lg border text-center text-sm text-muted-foreground">
                         No orders found.
                     </div>
                 ) : (
-                    orders.map((order) => {
+                    filteredOrders.map((order) => {
                         const previewItems = order.items.slice(
                             0,
                             MAX_PREVIEW_ITEMS,
@@ -564,9 +670,7 @@ const OrdersPage = () => {
                                 key={order.id}
                                 className="w-full min-w-0 overflow-hidden rounded-xl border bg-background shadow-sm"
                             >
-                                {/* ------------------------------------------
-                                    Card Header
-                                ------------------------------------------ */}
+                                {/* Card Header */}
 
                                 <div className="flex min-w-0 items-start justify-between gap-2 border-b bg-muted/30 p-3 sm:gap-3 sm:p-4">
                                     <div className="min-w-0">
@@ -593,9 +697,7 @@ const OrdersPage = () => {
                                     </div>
                                 </div>
 
-                                {/* ------------------------------------------
-                                    Customer
-                                ------------------------------------------ */}
+                                {/* Customer */}
 
                                 <div className="border-b p-3 sm:p-4">
                                     <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -619,9 +721,7 @@ const OrdersPage = () => {
                                     </div>
                                 </div>
 
-                                {/* ------------------------------------------
-                                    Items
-                                ------------------------------------------ */}
+                                {/* Items */}
 
                                 <div className="border-b p-3 sm:p-4">
                                     <div className="mb-3 flex items-center justify-between">
@@ -681,9 +781,7 @@ const OrdersPage = () => {
                                     )}
                                 </div>
 
-                                {/* ------------------------------------------
-                                    Payment + Order Status
-                                ------------------------------------------ */}
+                                {/* Payment + Order Status */}
 
                                 <div className="grid grid-cols-1 gap-3 border-b p-3 sm:grid-cols-2 sm:p-4">
                                     <div className="min-w-0">
@@ -717,9 +815,7 @@ const OrdersPage = () => {
                                     </div>
                                 </div>
 
-                                {/* ------------------------------------------
-                                    Subtotal + Action
-                                ------------------------------------------ */}
+                                {/* Subtotal + Action */}
 
                                 <div className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
                                     <div>
@@ -755,8 +851,8 @@ const OrdersPage = () => {
             ================================================== */}
 
             <div className="text-center text-sm text-muted-foreground sm:text-left">
-                Showing {orders.length}{" "}
-                {orders.length === 1 ? "order" : "orders"}
+                Showing {filteredOrders.length}{" "}
+                {filteredOrders.length === 1 ? "order" : "orders"}
             </div>
         </div>
     );

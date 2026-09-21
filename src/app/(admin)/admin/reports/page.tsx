@@ -62,7 +62,9 @@ const STOCK_LABELS: Record<string, string> = {
 };
 
 const ReportsPage = () => {
-    const [startDate, setStartDate] = useState("");
+    const getTodayDateString = () => new Date().toISOString().split("T")[0];
+
+    const [startDate, setStartDate] = useState(getTodayDateString());
     const [endDate, setEndDate] = useState("");
     const [loading, setLoading] = useState(true);
 
