@@ -24,7 +24,7 @@ const FOOTER_LINKS = [
         title: "Support",
         links: [
             { label: "Return Policy", href: "/return-policy" },
-            { label: "FAQ", href: "/faq" },
+            { label: "Track Order", href: "/track-order" },
         ],
     },
 ];
