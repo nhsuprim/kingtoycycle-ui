@@ -6,6 +6,7 @@ import BannerCarousel from "@/components/home/BannerCarousel";
 import CategorySlider from "@/components/shared/CategorySlider";
 import ProductCardSlider from "@/components/product/ProductCardSlider";
 import CategoryProductSection from "@/components/home/CategoryProductSection";
+import backgroundImg from "@/assets/images/backgroundimg.png";
 
 const MAX_CATEGORIES_ON_HOMEPAGE = 6; // পেজ অতিরিক্ত লম্বা না হওয়ার জন্য সীমা
 const PRODUCTS_PER_CATEGORY = 12;

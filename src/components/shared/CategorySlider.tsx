@@ -78,7 +78,7 @@ const CategorySlider = ({ categories }: CategorySliderProps) => {
                                     {/* Category Name */}
                                     <span
                                         className={cn(
-                                            "w-full text-center text-xs font-medium",
+                                            "w-full text-center font-semibold",
                                             isActive
                                                 ? "text-neutral-900"
                                                 : "text-neutral-600",

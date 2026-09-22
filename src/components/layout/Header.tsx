@@ -147,7 +147,7 @@ export default function Header() {
 
             <header
                 className={cn(
-                    "relative z-50 hidden w-full border-b border-gray-100 bg-white transition-all duration-500 ease-in-out will-change-transform md:block",
+                    "relative z-50 hidden w-full border-b border-gray-100 bg-[#FDFBD4] transition-all duration-500 ease-in-out will-change-transform md:block",
                     scrolled
                         ? "max-h-0 overflow-hidden border-transparent opacity-0"
                         : "max-h-24 opacity-100",
@@ -188,7 +188,7 @@ export default function Header() {
                                         setSearchTerm(e.target.value)
                                     }
                                     placeholder="Search for toys, brands, categories..."
-                                    className="h-10 rounded-full border-gray-200 bg-gray-50 pl-10 pr-4 text-sm placeholder:text-gray-400 hover:border-gray-300 hover:bg-white focus-visible:border-black focus-visible:ring-1 focus-visible:ring-black"
+                                    className="h-10 rounded-full border-gray-200 bg-yellow-50 pl-10 pr-4 text-sm placeholder:text-gray-400 hover:border-gray-300 hover:bg-white focus-visible:border-black focus-visible:ring-1 focus-visible:ring-black"
                                     aria-label="Search products"
                                 />
 
@@ -242,7 +242,7 @@ export default function Header() {
                 MOBILE: TOP BAR
             ================================================== */}
 
-            <div className="w-full border-b border-gray-100 bg-white md:hidden">
+            <div className="w-full border-b border-gray-100 bg-yellow-50 md:hidden">
                 <div className="flex h-14 items-center justify-between px-4">
                     {/* LOGO */}
 
@@ -401,7 +401,7 @@ export default function Header() {
 
             <nav
                 className={cn(
-                    "z-40 hidden w-full border-b border-gray-100 bg-white transition-all duration-300 md:block",
+                    "z-40 hidden w-full border-b border-gray-100 bg-white transition-all duration-300 md:block shadow-2xl",
                     scrolled
                         ? "sticky top-0 shadow-[0_1px_8px_rgba(0,0,0,0.06)]"
                         : "",
