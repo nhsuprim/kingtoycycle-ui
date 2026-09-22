@@ -49,7 +49,7 @@ const CategorySlider = ({ categories }: CategorySliderProps) => {
                                 <Link
                                     key={category.id}
                                     href={`/category/${category.slug}`}
-                                    className="flex w-20 shrink-0 flex-col items-center gap-2 sm:w-24"
+                                    className="flex w-20 shrink-0 flex-col items-center gap-2 sm:w-24 pl-4"
                                 >
                                     {/* Category Image */}
                                     <div
@@ -91,8 +91,6 @@ const CategorySlider = ({ categories }: CategorySliderProps) => {
                             );
                         })}
                     </div>
-
-                    {/* Right Arrow */}
                 </div>
             </div>
         </div>

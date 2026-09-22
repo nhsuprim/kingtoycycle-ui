@@ -147,7 +147,7 @@ export default function Header() {
 
             <header
                 className={cn(
-                    "relative z-50 hidden w-full border-b border-gray-100 bg-[#FDFBD4] transition-all duration-500 ease-in-out will-change-transform md:block",
+                    "relative z-50 hidden w-full border-b border-gray-100 bg-linear-to-r from-[#F9EFA5] via-[#FFF7D6] to-[#FFFDF2] transition-all duration-500 ease-in-out will-change-transform md:block",
                     scrolled
                         ? "max-h-0 overflow-hidden border-transparent opacity-0"
                         : "max-h-24 opacity-100",
