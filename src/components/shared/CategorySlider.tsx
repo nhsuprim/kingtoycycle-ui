@@ -4,7 +4,6 @@ import { useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Category } from "@/types/category";
 
@@ -35,10 +34,10 @@ const CategorySlider = ({ categories }: CategorySliderProps) => {
                     <div
                         ref={scrollRef}
                         className={cn(
-                            "flex gap-5 overflow-x-auto scroll-smooth py-3",
+                            "flex items-start gap-5 overflow-x-auto scroll-smooth py-3",
                             "[-ms-overflow-style:none] scrollbar-none",
                             "[&::-webkit-scrollbar]:hidden",
-                            "sm:justify-center sm:gap-6",
+                            "sm:justify-center sm:items-start sm:gap-6 px-4",
                         )}
                     >
                         {categories.map((category) => {
@@ -49,12 +48,12 @@ const CategorySlider = ({ categories }: CategorySliderProps) => {
                                 <Link
                                     key={category.id}
                                     href={`/category/${category.slug}`}
-                                    className="flex w-20 shrink-0 flex-col items-center gap-2 sm:w-24 pl-4"
+                                    className="flex w-20 shrink-0 flex-col items-center gap-2 sm:w-24 "
                                 >
                                     {/* Category Image */}
                                     <div
                                         className={cn(
-                                            "flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-neutral-100 transition-all duration-200",
+                                            "flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-100 transition-all duration-200",
                                             "sm:h-24 sm:w-24",
                                             isActive &&
                                                 "ring-2 ring-neutral-900 ring-offset-2",
@@ -78,7 +77,7 @@ const CategorySlider = ({ categories }: CategorySliderProps) => {
                                     {/* Category Name */}
                                     <span
                                         className={cn(
-                                            "w-full text-center font-semibold",
+                                            "flex min-h-10 w-full items-start justify-center text-center text-sm font-semibold leading-tight",
                                             isActive
                                                 ? "text-neutral-900"
                                                 : "text-neutral-600",
