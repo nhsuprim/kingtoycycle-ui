@@ -26,7 +26,7 @@ import Logo from "@/assets/images/kingToyCycle.png";
 const NAV_LINKS = [
     { label: "Home", href: "/" },
     { label: "All Products", href: "/products" },
-    { label: "Categories", href: "/categories" },
+    // { label: "Categories", href: "/categories" },
     { label: "Track Order", href: "/track-order" },
 ];
 
