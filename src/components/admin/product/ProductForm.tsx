@@ -229,8 +229,8 @@ const ProductForm = ({ product }: ProductFormProps) => {
                 sku,
                 color,
                 brand: brand || undefined,
-                regularPrice: regularPriceNumber,
-                discountPrice: discountPriceNumber,
+                regularPrice: Number(regularPrice),
+                discountPrice: discountPrice ? Number(discountPrice) : null,
                 categoryId,
                 featured,
             };
