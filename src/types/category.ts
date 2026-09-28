@@ -8,4 +8,5 @@ export interface Category {
     status: "ACTIVE" | "INACTIVE";
     createdAt: string;
     updatedAt: string;
+    serial_count?: number | null;
 }

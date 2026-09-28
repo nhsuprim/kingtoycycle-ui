@@ -36,11 +36,13 @@ const CategoryFormDialog = ({
     const [file, setFile] = useState<File | null>(null);
     const [bannerFile, setBannerFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
+    const [serialCount, setSerialCount] = useState("");
 
     useEffect(() => {
         if (open) {
             setName(category?.name ?? "");
             setDescription(category?.description ?? "");
+            setSerialCount(category?.serial_count?.toString() ?? ""); // ⬅️ নতুন
             setFile(null);
             setBannerFile(null);
         }
@@ -52,7 +54,14 @@ const CategoryFormDialog = ({
 
         try {
             const formData = new FormData();
-            formData.append("data", JSON.stringify({ name, description }));
+            formData.append(
+                "data",
+                JSON.stringify({
+                    name,
+                    description,
+                    serial_count: serialCount ? Number(serialCount) : null,
+                }),
+            );
             if (file) formData.append("file", file);
             if (bannerFile) formData.append("bannerImage", bannerFile);
 
@@ -103,6 +112,24 @@ const CategoryFormDialog = ({
                             onChange={(e) => setDescription(e.target.value)}
                             rows={3}
                         />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="serialCount">
+                            Display Order (optional)
+                        </Label>
+                        <Input
+                            id="serialCount"
+                            type="number"
+                            min={1}
+                            value={serialCount}
+                            onChange={(e) => setSerialCount(e.target.value)}
+                            placeholder="e.g. 1"
+                        />
+                        <p className="text-xs text-neutral-400">
+                            Lower number appears first (1 = top). Leave empty to
+                            show after ordered categories.
+                        </p>
                     </div>
 
                     <div className="space-y-2">

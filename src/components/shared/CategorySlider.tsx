@@ -26,11 +26,29 @@ const CategorySlider = ({ categories }: CategorySliderProps) => {
 
     if (categories.length === 0) return null;
 
+    const sortedCategories = [...categories].sort((a, b) => {
+        const aSerial = a.serial_count;
+        const bSerial = b.serial_count;
+
+        if (aSerial != null && bSerial != null) {
+            return Number(aSerial) - Number(bSerial);
+        }
+
+        if (aSerial != null) {
+            return -1;
+        }
+
+        if (bSerial != null) {
+            return 1;
+        }
+
+        return 0;
+    });
+
     return (
         <div className="relative border-b bg-white py-4">
             <div className="mx-auto max-w-7xl px-4">
                 <div className="relative">
-                    {/* Category List */}
                     <div
                         ref={scrollRef}
                         className={cn(
@@ -40,7 +58,7 @@ const CategorySlider = ({ categories }: CategorySliderProps) => {
                             "sm:justify-center sm:items-start sm:gap-6 px-4",
                         )}
                     >
-                        {categories.map((category) => {
+                        {sortedCategories.map((category) => {
                             const isActive =
                                 pathname === `/category/${category.slug}`;
 
@@ -48,9 +66,8 @@ const CategorySlider = ({ categories }: CategorySliderProps) => {
                                 <Link
                                     key={category.id}
                                     href={`/category/${category.slug}`}
-                                    className="flex w-20 shrink-0 flex-col items-center gap-2 sm:w-24 "
+                                    className="flex w-20 shrink-0 flex-col items-center gap-2 sm:w-24"
                                 >
-                                    {/* Category Image */}
                                     <div
                                         className={cn(
                                             "flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-100 transition-all duration-200",
@@ -74,7 +91,6 @@ const CategorySlider = ({ categories }: CategorySliderProps) => {
                                         )}
                                     </div>
 
-                                    {/* Category Name */}
                                     <span
                                         className={cn(
                                             "flex min-h-10 w-full items-start justify-center text-center text-sm font-semibold leading-tight",

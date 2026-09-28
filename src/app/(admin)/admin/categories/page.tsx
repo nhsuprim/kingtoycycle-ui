@@ -117,6 +117,7 @@ const CategoriesPage = () => {
                         <TableRow>
                             <TableHead>Image</TableHead>
                             <TableHead>Name</TableHead>
+                            <TableHead>Order</TableHead>
                             <TableHead>Description</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead className="text-right">
@@ -161,6 +162,9 @@ const CategoriesPage = () => {
                                     </TableCell>
                                     <TableCell className="font-medium">
                                         {category.name}
+                                    </TableCell>
+                                    <TableCell className="text-neutral-500">
+                                        {category.serial_count ?? "—"}
                                     </TableCell>
                                     <TableCell className="max-w-xs truncate text-neutral-500">
                                         {category.description || "—"}
