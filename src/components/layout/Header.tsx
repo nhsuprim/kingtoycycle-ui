@@ -256,124 +256,21 @@ export default function Header() {
                     </Link>
 
                     <div className="flex items-center gap-1">
-                        {/* CART */}
-
-                        <Link
-                            href="/cart"
-                            className="relative inline-flex h-9 w-9 items-center justify-center rounded-full hover:bg-gray-100"
-                            aria-label={`Cart — ${cartCount} items`}
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 rounded-full"
+                            onClick={() => setSearchOpen(true)}
+                            aria-label="Search"
                         >
-                            <ShoppingCart
-                                className="h-4.5 w-4.5"
-                                strokeWidth={1.8}
-                            />
-
-                            {cartCount > 0 && (
-                                <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full border-[1.5px] border-white bg-black px-0.75 text-[9px] font-bold leading-none text-white">
-                                    {cartCount}
-                                </span>
-                            )}
-                        </Link>
-
-                        {/* MOBILE MENU */}
-
-                        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-                            <SheetTrigger
-                                render={
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-9 w-9 rounded-full"
-                                        aria-label="Open menu"
-                                    />
-                                }
-                            >
-                                {mobileOpen ? (
-                                    <X className="h-5 w-5" strokeWidth={1.8} />
-                                ) : (
-                                    <Menu
-                                        className="h-5 w-5"
-                                        strokeWidth={1.8}
-                                    />
-                                )}
-                            </SheetTrigger>
-
-                            <SheetContent side="left" className="w-72 p-0">
-                                <SheetTitle className="sr-only">
-                                    <Image
-                                        src={Logo}
-                                        height={60}
-                                        width={100}
-                                        alt="King Toy Cycle Logo"
-                                    />
-                                </SheetTitle>
-
-                                <div className="flex h-full flex-col">
-                                    {/* MOBILE MENU HEADER */}
-
-                                    <div className="flex items-center border-b border-gray-100 px-6 py-5">
-                                        <Image
-                                            src={Logo}
-                                            height={100}
-                                            width={100}
-                                            alt="King Toy Cycle Logo"
-                                        />
-                                    </div>
-
-                                    {/* MOBILE NAV */}
-
-                                    <nav className="flex-1 overflow-y-auto px-4 py-3">
-                                        <ul role="list" className="space-y-0.5">
-                                            {NAV_LINKS.map((link) => (
-                                                <li key={link.href}>
-                                                    <Link
-                                                        href={link.href}
-                                                        onClick={() =>
-                                                            setMobileOpen(false)
-                                                        }
-                                                        className="flex items-center rounded-lg px-3 py-3 text-base font-medium text-gray-700 transition-colors duration-150 hover:bg-gray-50 hover:text-black"
-                                                    >
-                                                        {link.label}
-                                                    </Link>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </nav>
-
-                                    {/* MOBILE CART */}
-
-                                    <div className="border-t border-gray-100 px-6 py-5">
-                                        <Link
-                                            href="/cart"
-                                            onClick={() => setMobileOpen(false)}
-                                        >
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="relative w-full gap-2 rounded-full text-sm"
-                                            >
-                                                <ShoppingCart
-                                                    className="h-4 w-4"
-                                                    strokeWidth={1.8}
-                                                />
-                                                View Cart
-                                                {cartCount > 0 && (
-                                                    <span className="absolute -right-1.5 -top-1.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full border-2 border-white bg-black px-1 text-[10px] font-bold leading-none text-white">
-                                                        {cartCount}
-                                                    </span>
-                                                )}
-                                            </Button>
-                                        </Link>
-                                    </div>
-                                </div>
-                            </SheetContent>
-                        </Sheet>
+                            <Search className="h-4.5 w-4.5" strokeWidth={1.8} />
+                        </Button>
                     </div>
                 </div>
 
                 {/* MOBILE SEARCH */}
 
-                <div className="px-4 pb-2.5">
+                {/* <div className="px-4 pb-2.5">
                     <div className="relative">
                         <Search
                             className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
@@ -391,7 +288,7 @@ export default function Header() {
 
                         {searchTerm && renderSearchDropdown(40)}
                     </div>
-                </div>
+                </div> */}
             </div>
 
             {/* ==================================================
