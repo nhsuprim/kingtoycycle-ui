@@ -129,7 +129,8 @@ const CheckoutContent = () => {
     const [phone, setPhone] = useState("");
     const [address, setAddress] = useState("");
 
-    const [area, setArea] = useState<ShippingArea>("DHAKA");
+    // Default: Outside Dhaka
+    const [area, setArea] = useState<ShippingArea>("OUTSIDE_DHAKA");
 
     const [couponCode, setCouponCode] = useState("");
 
@@ -196,7 +197,9 @@ const CheckoutContent = () => {
         : 0;
 
     const shippingAreaLabel =
-        area === "DHAKA" ? "Inside Dhaka" : "Outside Dhaka";
+        area === "DHAKA"
+            ? "Inside Dhaka (ঢাকার ভিতরে)"
+            : "Outside Dhaka (ঢাকার বাইরে)";
 
     const estimatedTotal = subtotal + shippingCost;
 
@@ -263,11 +266,8 @@ const CheckoutContent = () => {
         try {
             const order = await api.post<Order>("/order", {
                 customerName: customerName.trim(),
-
                 phone: phone.trim(),
-
                 address: address.trim(),
-
                 area,
 
                 items: items.map((item) => ({
@@ -285,18 +285,13 @@ const CheckoutContent = () => {
             items.forEach((item) => {
                 api.post("/event", {
                     eventType: "PURCHASE",
-
                     sessionId: getSessionId(),
-
                     phone: phone.trim(),
-
                     productId: item.productId,
 
                     metadata: {
                         orderNumber: order.orderNumber,
-
                         quantity: item.quantity,
-
                         price: item.price,
                     },
                 }).catch(() => {});
@@ -373,20 +368,33 @@ const CheckoutContent = () => {
                     </p>
                 </div>
 
-                <div className="flex flex-col gap-6 lg:flex-row">
+                {/* =====================================================
+                    LAYOUT GRID
+
+                    MOBILE ORDER:
+                    1. Delivery Details
+                    2. Order Summary
+                    3. Place Order button
+                    4. Payment Method
+
+                    DESKTOP:
+                    left  -> Delivery + Payment
+                    right -> Order Summary (sticky)
+                ====================================================== */}
+
+                <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-6">
                     {/* =================================================
-                        CHECKOUT FORM
+                        1. DELIVERY DETAILS
                     ================================================== */}
 
                     <form
+                        id="checkout-form"
                         onSubmit={(e) => {
                             e.preventDefault();
                             void handleSubmit();
                         }}
-                        className="flex-1 space-y-5"
+                        className="lg:col-start-1 lg:row-start-1"
                     >
-                        {/* DELIVERY DETAILS */}
-
                         <div className="overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-sm">
                             {/* Section Header */}
 
@@ -462,42 +470,65 @@ const CheckoutContent = () => {
                                         onChange={(e) =>
                                             setAddress(e.target.value)
                                         }
-                                        placeholder="বাড়ি/ফ্ল্যাট, রোড, এলাকা ইত্যাদি লিখুন"
+                                        placeholder="বাড়ি/ফ্ল্যাট, রোড, এলাকা ইত্যাদি লিখুন"
                                         rows={3}
                                         className="resize-none border-slate-200 bg-slate-50/50 transition focus:border-blue-400 focus:bg-white"
                                         required
                                     />
                                 </div>
 
-                                {/* AREA */}
+                                {/* =================================================
+                                    AREA - HIGHLIGHTED
+                                ================================================== */}
 
-                                <div className="rounded-xl border border-orange-100 bg-orange-50/60 p-3">
-                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                                        <div>
-                                            <Label
-                                                htmlFor="area"
-                                                className="font-semibold text-slate-700"
-                                            >
-                                                Delivery Area (ডেলিভারি এলাকা)
-                                            </Label>
+                                <div className="relative overflow-hidden rounded-2xl border border-orange-200 bg-linear-to-br from-orange-50 via-amber-50 to-yellow-50 p-4 shadow-sm ring-1 ring-orange-100">
+                                    {/* Decorative Glow */}
 
-                                            <p className="mt-0.5 text-xs text-slate-500">
-                                                আপনার delivery location নির্বাচন
-                                                করুন
-                                            </p>
+                                    <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-orange-300/30 blur-3xl" />
+
+                                    <div className="pointer-events-none absolute -bottom-10 -left-8 h-24 w-24 rounded-full bg-yellow-300/20 blur-2xl" />
+
+                                    <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                        {/* Area Title */}
+
+                                        <div className="min-w-0">
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-500 text-lg shadow-md shadow-orange-200">
+                                                    🚚
+                                                </div>
+
+                                                <div>
+                                                    <Label
+                                                        htmlFor="area"
+                                                        className="font-bold text-slate-800"
+                                                    >
+                                                        Delivery Area
+                                                        <span className="ml-1 text-orange-700">
+                                                            (ডেলিভারি এলাকা)
+                                                        </span>
+                                                    </Label>
+
+                                                    <p className="mt-0.5 text-xs text-slate-600">
+                                                        আপনার delivery location
+                                                        নির্বাচন করুন
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </div>
+
+                                        {/* Area Select */}
 
                                         <Select
                                             items={[
                                                 {
-                                                    label: `Inside Dhaka — ৳${
+                                                    label: `Inside Dhaka (ঢাকার ভিতরে) — ৳${
                                                         shippingSettings?.insideDhakaCharge ??
                                                         0
                                                     }`,
                                                     value: "DHAKA",
                                                 },
                                                 {
-                                                    label: `Outside Dhaka — ৳${
+                                                    label: `Outside Dhaka (ঢাকার বাইরে) — ৳${
                                                         shippingSettings?.outsideDhakaCharge ??
                                                         0
                                                     }`,
@@ -515,14 +546,15 @@ const CheckoutContent = () => {
                                         >
                                             <SelectTrigger
                                                 id="area"
-                                                className="h-11 w-full border-orange-200 bg-white font-medium shadow-sm sm:w-60"
+                                                className="h-12 w-full border-2 border-orange-300 bg-white font-semibold text-slate-800 shadow-sm transition-all hover:border-orange-400 hover:bg-orange-50/50 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 sm:w-72"
                                             >
                                                 <SelectValue />
                                             </SelectTrigger>
 
                                             <SelectContent>
                                                 <SelectItem value="DHAKA">
-                                                    Inside Dhaka — ৳
+                                                    Inside Dhaka (ঢাকার ভিতরে)
+                                                    {" — ৳"}
                                                     {(
                                                         shippingSettings?.insideDhakaCharge ??
                                                         0
@@ -530,7 +562,8 @@ const CheckoutContent = () => {
                                                 </SelectItem>
 
                                                 <SelectItem value="OUTSIDE_DHAKA">
-                                                    Outside Dhaka — ৳
+                                                    Outside Dhaka (ঢাকার বাইরে)
+                                                    {" — ৳"}
                                                     {(
                                                         shippingSettings?.outsideDhakaCharge ??
                                                         0
@@ -538,6 +571,28 @@ const CheckoutContent = () => {
                                                 </SelectItem>
                                             </SelectContent>
                                         </Select>
+                                    </div>
+
+                                    {/* Selected Delivery Information */}
+
+                                    <div className="relative mt-3 flex items-center gap-2 rounded-xl border border-orange-200/80 bg-white/80 px-3 py-2.5 text-xs backdrop-blur-sm">
+                                        <span className="flex h-2.5 w-2.5 shrink-0 rounded-full bg-orange-500 shadow-[0_0_0_3px_rgba(249,115,22,0.15)]" />
+
+                                        <span className="text-slate-500">
+                                            Delivery charge:
+                                        </span>
+
+                                        <span className="font-bold text-orange-700">
+                                            {shippingCost === 0
+                                                ? "Free Delivery"
+                                                : `৳${shippingCost.toLocaleString()}`}
+                                        </span>
+
+                                        <span className="ml-auto font-semibold text-slate-700">
+                                            {area === "DHAKA"
+                                                ? "ঢাকার ভিতরে"
+                                                : "ঢাকার বাইরে"}
+                                        </span>
                                     </div>
                                 </div>
 
@@ -565,57 +620,13 @@ const CheckoutContent = () => {
                                 </div>
                             </div>
                         </div>
-
-                        {/* PAYMENT */}
-
-                        <div className="overflow-hidden rounded-2xl border border-emerald-100 bg-white shadow-sm">
-                            <div className="border-b border-emerald-100 bg-linear-to-r from-emerald-50 to-teal-50 px-5 py-4">
-                                <h2 className="text-base font-bold text-slate-900">
-                                    Payment Method
-                                </h2>
-
-                                <p className="mt-0.5 text-xs text-slate-500">
-                                    পেমেন্ট পদ্ধতি
-                                </p>
-                            </div>
-
-                            <div className="p-5">
-                                <div className="flex items-center gap-3 rounded-xl border border-emerald-100 bg-emerald-50/70 p-4">
-                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-lg">
-                                        💵
-                                    </div>
-
-                                    <div>
-                                        <p className="font-semibold text-slate-800">
-                                            Cash on Delivery (COD)
-                                        </p>
-
-                                        <p className="text-xs text-slate-500">
-                                            পণ্য হাতে পাওয়ার পর পেমেন্ট করুন
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* MOBILE PLACE ORDER */}
-
-                        <Button
-                            type="submit"
-                            disabled={submitting}
-                            className="h-12 w-full rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 text-sm font-semibold shadow-md transition hover:from-blue-700 hover:to-indigo-700 sm:hidden"
-                        >
-                            {submitting
-                                ? "Placing Order..."
-                                : `Place Order — ৳${estimatedTotal.toLocaleString()}`}
-                        </Button>
                     </form>
 
                     {/* =================================================
-                        ORDER SUMMARY
+                        2. ORDER SUMMARY
                     ================================================== */}
 
-                    <div className="lg:w-80 lg:shrink-0">
+                    <div className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
                         <div className="overflow-hidden rounded-2xl border border-indigo-100 bg-white shadow-sm lg:sticky lg:top-5">
                             {/* Summary Header */}
 
@@ -730,6 +741,55 @@ const CheckoutContent = () => {
                                 <p className="mt-3 text-center text-[11px] text-slate-400">
                                     🔒 Your information is safe and secure
                                 </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* =================================================
+                        3. MOBILE PLACE ORDER
+                    ================================================== */}
+
+                    <Button
+                        type="submit"
+                        form="checkout-form"
+                        disabled={submitting}
+                        className="h-12 w-full rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 text-sm font-semibold shadow-md transition hover:from-blue-700 hover:to-indigo-700 sm:hidden"
+                    >
+                        {submitting
+                            ? "Placing Order..."
+                            : `Place Order — ৳${estimatedTotal.toLocaleString()}`}
+                    </Button>
+
+                    {/* =================================================
+                        4. PAYMENT METHOD
+                    ================================================== */}
+
+                    <div className="overflow-hidden rounded-2xl border border-emerald-100 bg-white shadow-sm lg:col-start-1 lg:row-start-2">
+                        <div className="border-b border-emerald-100 bg-linear-to-r from-emerald-50 to-teal-50 px-5 py-4">
+                            <h2 className="text-base font-bold text-slate-900">
+                                Payment Method
+                            </h2>
+
+                            <p className="mt-0.5 text-xs text-slate-500">
+                                পেমেন্ট পদ্ধতি
+                            </p>
+                        </div>
+
+                        <div className="p-5">
+                            <div className="flex items-center gap-3 rounded-xl border border-emerald-100 bg-emerald-50/70 p-4">
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-lg">
+                                    💵
+                                </div>
+
+                                <div>
+                                    <p className="font-semibold text-slate-800">
+                                        Cash on Delivery (COD)
+                                    </p>
+
+                                    <p className="text-xs text-slate-500">
+                                        পণ্য হাতে পাওয়ার পর পেমেন্ট করুন
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
