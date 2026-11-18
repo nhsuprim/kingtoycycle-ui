@@ -14,6 +14,7 @@ import StarRatingDisplay from "@/components/admin/review/StarRatingDisplay";
 import { Separator } from "@/components/ui/separator";
 import { Phone, MessageCircle } from "lucide-react";
 import ProductCardSlider from "@/components/product/ProductCardSlider";
+import { REVALIDATE_DAY } from "@/lib/revalidate";
 
 interface ProductPageProps {
     params: Promise<{ id: string }>;
@@ -21,7 +22,10 @@ interface ProductPageProps {
 
 const getProduct = async (id: string): Promise<Product | null> => {
     try {
-        return await api.get<Product>(`/product/${id}`, 60); // ISR — ১ মিনিট revalidate
+        return await api.get<Product>(`/product/${id}`, {
+            revalidate: REVALIDATE_DAY,
+            tags: [`product-${id}`],
+        });
     } catch {
         return null;
     }
@@ -29,7 +33,10 @@ const getProduct = async (id: string): Promise<Product | null> => {
 
 const getReviews = async (productId: string): Promise<Review[]> => {
     try {
-        return await api.get<Review[]>(`/review/product/${productId}`, 60);
+        return await api.get<Review[]>(`/review/product/${productId}`, {
+            revalidate: REVALIDATE_DAY,
+            tags: [`reviews-${productId}`],
+        });
     } catch {
         return [];
     }
@@ -42,7 +49,10 @@ const getRelatedProducts = async (
     try {
         const products = await api.get<Product[]>(
             `/product?categoryId=${categoryId}&limit=13`,
-            60,
+            {
+                revalidate: REVALIDATE_DAY,
+                tags: [`products-${categoryId}`],
+            },
         );
         return products.filter((p) => p.id !== excludeId).slice(0, 12);
     } catch {

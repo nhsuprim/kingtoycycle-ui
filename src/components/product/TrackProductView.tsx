@@ -23,12 +23,26 @@ const TrackProductView = ({
         if (hasTracked.current) return;
         hasTracked.current = true;
 
-        api.post("/event", {
-            eventType: "PRODUCT_VIEW",
-            sessionId: getSessionId(),
-            productId,
-            page: window.location.pathname,
-        }).catch(() => {});
+        // একই session-এ একই product দ্বিতীয়বার server-এ log হবে না
+        // (Pixel ও GTM আগের মতোই প্রতিবার fire হবে)
+        const key = `pv:${productId}`;
+        let alreadyLogged = false;
+
+        try {
+            alreadyLogged = sessionStorage.getItem(key) !== null;
+            if (!alreadyLogged) sessionStorage.setItem(key, "1");
+        } catch {
+            // Private mode-এ sessionStorage blocked হলে log করে দেব
+        }
+
+        if (!alreadyLogged) {
+            api.post("/event", {
+                eventType: "PRODUCT_VIEW",
+                sessionId: getSessionId(),
+                productId,
+                page: window.location.pathname,
+            }).catch(() => {});
+        }
 
         fbTrack("ViewContent", {
             content_ids: [productId],

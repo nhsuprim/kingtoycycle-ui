@@ -13,7 +13,20 @@ interface ApiResponse<T> {
 }
 
 interface FetchOptions extends RequestInit {
-    revalidate?: number;
+    revalidate?: number | false;
+    tags?: string[];
+}
+
+// HTTP status সহ error — server page-এ "আসল 404" আর "সাময়িক backend error" আলাদা করার জন্য
+export class ApiError extends Error {
+    status: number;
+
+    constructor(message: string, status: number) {
+        super(message);
+        this.name = "ApiError";
+        this.status = status;
+        Object.setPrototypeOf(this, ApiError.prototype);
+    }
 }
 
 let isRefreshing = false;
@@ -26,6 +39,22 @@ const NO_REFRESH_ENDPOINTS = [
     "/auth/refresh-token",
     "/auth/logout",
 ];
+
+// ========================================
+// Redirect to Login (loop-safe)
+// ========================================
+
+const redirectToLogin = (endpoint: string) => {
+    if (typeof window === "undefined") return;
+
+    // Login page-এ থাকলে redirect নয় (reload loop এড়াতে)
+    if (window.location.pathname === "/login") return;
+
+    // /auth/me-এর ব্যর্থতা AdminLayout নিজেই handle করে
+    if (endpoint === "/auth/me") return;
+
+    window.location.replace("/login");
+};
 
 // ========================================
 // Refresh Access Token
@@ -60,24 +89,39 @@ const rawFetch = async (
     endpoint: string,
     options: FetchOptions = {},
 ): Promise<Response> => {
-    const { revalidate, ...fetchOptions } = options;
+    const { revalidate, tags, ...fetchOptions } = options;
+    const hasCache = revalidate !== undefined || (tags && tags.length > 0);
 
-    return fetch(`${API_URL}${endpoint}`, {
+    // GET request-এ চিহ্ন: server (ISR) = isr, Admin panel = admin
+    let finalEndpoint = endpoint;
+
+    if (fetchOptions.method === "GET") {
+        const isAdminPage =
+            typeof window !== "undefined" &&
+            window.location.pathname.startsWith("/admin");
+        const src = hasCache ? "isr" : isAdminPage ? "admin" : null;
+
+        if (src) {
+            finalEndpoint += `${endpoint.includes("?") ? "&" : "?"}src=${src}`;
+        }
+    }
+
+    return fetch(`${API_URL}${finalEndpoint}`, {
         ...fetchOptions,
-
         credentials: "include",
-
         headers: {
             "Content-Type": "application/json",
             ...fetchOptions.headers,
         },
-
-        next: revalidate !== undefined ? { revalidate } : undefined,
-
-        cache: revalidate !== undefined ? undefined : "no-store",
+        next: hasCache
+            ? {
+                  ...(revalidate !== undefined ? { revalidate } : {}),
+                  ...(tags ? { tags } : {}),
+              }
+            : undefined,
+        cache: hasCache ? undefined : "no-store",
     });
 };
-
 // ========================================
 // API Fetch
 // ========================================
@@ -92,40 +136,31 @@ const apiFetch = async <T>(
         endpoint.startsWith(path),
     );
 
-    // ========================================
     // 401 → Refresh Token
-    // ========================================
-
     if (res.status === 401 && !isAuthEndpoint) {
         const refreshed = await refreshAccessToken();
 
         if (refreshed) {
             res = await rawFetch(endpoint, options);
         } else {
-            if (typeof window !== "undefined") {
-                window.location.replace("/login");
-            }
-
-            throw new Error("Session expired. Please log in again.");
+            redirectToLogin(endpoint);
+            throw new ApiError("Session expired. Please log in again.", 401);
         }
     }
 
-    // ========================================
     // Error Handling
-    // ========================================
-
     if (!res.ok) {
         const errorBody = await res.json().catch(() => ({
             message: "Something went wrong",
         }));
 
-        throw new Error(errorBody.message || `API error: ${res.status}`);
+        throw new ApiError(
+            errorBody.message || `API error: ${res.status}`,
+            res.status,
+        );
     }
 
-    // ========================================
     // Success
-    // ========================================
-
     const json: ApiResponse<T> = await res.json();
 
     return json.data;
@@ -150,40 +185,31 @@ const apiFetchForm = async <T>(
 
     let res = await doRequest();
 
-    // ========================================
     // 401 → Refresh
-    // ========================================
-
     if (res.status === 401) {
         const refreshed = await refreshAccessToken();
 
         if (refreshed) {
             res = await doRequest();
         } else {
-            if (typeof window !== "undefined") {
-                window.location.replace("/login");
-            }
-
-            throw new Error("Session expired. Please log in again.");
+            redirectToLogin(endpoint);
+            throw new ApiError("Session expired. Please log in again.", 401);
         }
     }
 
-    // ========================================
     // Error
-    // ========================================
-
     if (!res.ok) {
         const errorBody = await res.json().catch(() => ({
             message: "Something went wrong",
         }));
 
-        throw new Error(errorBody.message || `API error: ${res.status}`);
+        throw new ApiError(
+            errorBody.message || `API error: ${res.status}`,
+            res.status,
+        );
     }
 
-    // ========================================
     // Success
-    // ========================================
-
     const json: ApiResponse<T> = await res.json();
 
     return json.data;
@@ -194,11 +220,13 @@ const apiFetchForm = async <T>(
 // ========================================
 
 export const api = {
-    get: <T>(endpoint: string, revalidate?: number) =>
-        apiFetch<T>(endpoint, {
-            method: "GET",
-            revalidate,
-        }),
+    get: <T>(
+        endpoint: string,
+        opts?: number | { revalidate?: number | false; tags?: string[] },
+    ) => {
+        const o = typeof opts === "number" ? { revalidate: opts } : opts;
+        return apiFetch<T>(endpoint, { method: "GET", ...o });
+    },
 
     post: <T>(endpoint: string, body: unknown) =>
         apiFetch<T>(endpoint, {

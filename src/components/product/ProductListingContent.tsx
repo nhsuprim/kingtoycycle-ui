@@ -40,6 +40,7 @@ interface ProductListingContentProps {
     basePath: string;
     initialProducts: Product[];
     initialCategories: Category[];
+    initialColors: string[]; // ⬅️ নতুন
 }
 
 const ProductListingContent = ({
@@ -48,6 +49,7 @@ const ProductListingContent = ({
     basePath,
     initialProducts,
     initialCategories,
+    initialColors,
 }: ProductListingContentProps) => {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -61,9 +63,9 @@ const ProductListingContent = ({
     const limit = searchParams.get("limit") ?? "40";
 
     const [products, setProducts] = useState<Product[]>(initialProducts);
-    const [allCategoryProducts, setAllCategoryProducts] =
-        useState<Product[]>(initialProducts);
-    const [categories, setCategories] = useState<Category[]>(initialCategories);
+    const [categories] = useState<Category[]>(initialCategories);
+    const [availableColors, setAvailableColors] =
+        useState<string[]>(initialColors);
     const [loading, setLoading] = useState(false);
     const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
@@ -84,19 +86,23 @@ const ProductListingContent = ({
         [router, searchParams, basePath],
     );
 
+    // Color list: শুধু category বদলালে, হালকা facets endpoint থেকে
+    // (এই effect-টা নিচের fetchProducts effect-এর আগে থাকতে হবে)
     useEffect(() => {
         if (isFirstRender.current) return;
 
-        const fetchFacetProducts = async () => {
+        const fetchFacets = async () => {
             try {
                 const query = categoryId ? `?categoryId=${categoryId}` : "";
-                const data = await api.get<Product[]>(`/product${query}`);
-                setAllCategoryProducts(data);
+                const data = await api.get<{ colors: string[] }>(
+                    `/product/facets${query}`,
+                );
+                setAvailableColors(data.colors);
             } catch {
                 // skip
             }
         };
-        fetchFacetProducts();
+        fetchFacets();
     }, [categoryId]);
 
     const fetchProducts = useCallback(async () => {
@@ -131,10 +137,6 @@ const ProductListingContent = ({
         }
         fetchProducts();
     }, [fetchProducts]);
-
-    const availableColors = Array.from(
-        new Set(allCategoryProducts.map((p) => p.color.toLowerCase())),
-    ).sort();
 
     const breadcrumbItems = [
         { label: "Home", href: "/" },
@@ -178,7 +180,6 @@ const ProductListingContent = ({
             <Breadcrumb items={breadcrumbItems} />
 
             <div className="mt-4 flex flex-col gap-6 lg:flex-row">
-                {/* Desktop sidebar — শুধু lg+ এ দেখা যাবে */}
                 <div className="hidden lg:block">
                     <ProductFilterSidebar {...filterSidebarProps} />
                 </div>
@@ -190,7 +191,6 @@ const ProductListingContent = ({
                         </p>
 
                         <div className="flex gap-2">
-                            {/* Mobile/Tablet filter button — lg-এর নিচে দেখা যাবে */}
                             <Sheet
                                 open={mobileFilterOpen}
                                 onOpenChange={setMobileFilterOpen}
@@ -227,7 +227,9 @@ const ProductListingContent = ({
                             <Select
                                 items={SORT_OPTIONS}
                                 value={sort}
-                                onValueChange={(v) => updateParams({ sort: v })}
+                                onValueChange={(v) =>
+                                    v && updateParams({ sort: v })
+                                }
                             >
                                 <SelectTrigger className="h-9 w-40 text-sm sm:w-44">
                                     <SelectValue placeholder="Sort by" />
@@ -251,7 +253,7 @@ const ProductListingContent = ({
                                 }))}
                                 value={limit}
                                 onValueChange={(v) =>
-                                    updateParams({ limit: v })
+                                    v && updateParams({ limit: v })
                                 }
                             >
                                 <SelectTrigger className="hidden h-9 w-28 text-sm sm:flex">

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import CategorySlider from "@/components/shared/CategorySlider";
 import ProductListingContent from "@/components/product/ProductListingContent";
 import { api } from "@/lib/api";
+import { REVALIDATE_DAY } from "@/lib/revalidate";
 import { SITE_NAME } from "@/lib/constants";
 import type { Product } from "@/types/product";
 import type { Category } from "@/types/category";
@@ -13,28 +14,35 @@ export const metadata: Metadata = {
     alternates: { canonical: "/products" },
 };
 
-const getInitialProducts = async (): Promise<Product[]> => {
-    try {
-        return await api.get<Product[]>("/product?sort=newest&limit=40", 60);
-    } catch {
-        return [];
-    }
-};
+const getInitialProducts = () =>
+    api.get<Product[]>("/product?sort=newest&limit=40", {
+        revalidate: REVALIDATE_DAY,
+        tags: ["products"],
+    });
 
 const getInitialCategories = async (): Promise<Category[]> => {
-    try {
-        const data = await api.get<Category[]>("/category", 300);
-        return data.filter((c) => c.status === "ACTIVE");
-    } catch {
-        return [];
-    }
+    const data = await api.get<Category[]>("/category", {
+        revalidate: REVALIDATE_DAY,
+        tags: ["categories"],
+    });
+    return data.filter((c) => c.status === "ACTIVE");
+};
+
+const getInitialColors = async (): Promise<string[]> => {
+    const data = await api.get<{ colors: string[] }>("/product/facets", {
+        revalidate: REVALIDATE_DAY,
+        tags: ["products"],
+    });
+    return data.colors;
 };
 
 const ProductsPage = async () => {
-    const [initialProducts, initialCategories] = await Promise.all([
-        getInitialProducts(),
-        getInitialCategories(),
-    ]);
+    const [initialProducts, initialCategories, initialColors] =
+        await Promise.all([
+            getInitialProducts(),
+            getInitialCategories(),
+            getInitialColors(),
+        ]);
 
     return (
         <div>
@@ -50,6 +58,7 @@ const ProductsPage = async () => {
                     basePath="/products"
                     initialProducts={initialProducts}
                     initialCategories={initialCategories}
+                    initialColors={initialColors}
                 />
             </Suspense>
         </div>

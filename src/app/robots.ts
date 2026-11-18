@@ -13,6 +13,7 @@ const robots = (): MetadataRoute.Robots => {
                     "/cart",
                     "/checkout",
                     "/order-success",
+                    "/*?*",
                 ],
             },
         ],
